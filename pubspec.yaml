@@ -19,7 +19,7 @@ dependencies:
   permission_handler: ^11.4.0
   core_utils:
     git:
-      url: https://source.intalio.com/etgs-qatar/shared_group/flutter_packages/core_utils_flutter.git
+      url: https://github.com/intalio-dev/core_utils_flutter.git
       ref: main
 dev_dependencies:
   flutter_test:
