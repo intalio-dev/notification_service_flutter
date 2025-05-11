@@ -84,16 +84,7 @@ class NotificationService {
   static Future<String?> getFCMToken() async {
     try {
       await FirebaseMessaging.instance.requestPermission();
-
-      String? token;
-
-      if (Platform.isIOS) {
-        token = await FirebaseMessaging.instance.getAPNSToken();
-        token ??= await FirebaseMessaging.instance.getToken();
-      } else {
-        token = await FirebaseMessaging.instance.getToken();
-      }
-
+      final token = await FirebaseMessaging.instance.getToken();
       AppLogs.debugLog("FCM Token: $token");
       return token;
     } catch (e, stack) {
