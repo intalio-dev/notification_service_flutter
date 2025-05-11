@@ -10,7 +10,8 @@ import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
-  static final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   static Future<void> Function(String?)? _onNotificationClickAction;
   static final NotificationService _instance = NotificationService._internal();
 
@@ -36,15 +37,18 @@ class NotificationService {
       await Permission.notification.request();
     }
 
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
 
-    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings("app_icon");
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings("app_icon");
 
-    final DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
+    final DarwinInitializationSettings iosSettings =
+        DarwinInitializationSettings(
       requestSoundPermission: true,
       requestBadgePermission: true,
       requestAlertPermission: true,
@@ -67,9 +71,10 @@ class NotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if(Platform.isAndroid){
-        AppLogs.debugLog("Foreground Notification: ${message.notification?.title}");
-        _showNotification(message,isForeGround: true);
+      if (Platform.isAndroid) {
+        AppLogs.debugLog(
+            "Foreground Notification: ${message.notification?.title}");
+        _showNotification(message, isForeGround: true);
       }
     });
 
@@ -77,9 +82,24 @@ class NotificationService {
   }
 
   static Future<String?> getFCMToken() async {
-    String? token = Platform.isIOS? await FirebaseMessaging.instance.getAPNSToken() : await FirebaseMessaging.instance.getToken();
-    AppLogs.debugLog("FCM Token: $token");
-    return token;
+    try {
+      await FirebaseMessaging.instance.requestPermission();
+
+      String? token;
+
+      if (Platform.isIOS) {
+        token = await FirebaseMessaging.instance.getAPNSToken();
+        token ??= await FirebaseMessaging.instance.getToken();
+      } else {
+        token = await FirebaseMessaging.instance.getToken();
+      }
+
+      AppLogs.debugLog("FCM Token: $token");
+      return token;
+    } catch (e, stack) {
+      AppLogs.debugLog("Error getting FCM token: $e\n$stack");
+      return null;
+    }
   }
 
   static void subscribeToTopics(List<String> topics) {
@@ -91,30 +111,35 @@ class NotificationService {
   }
 
   static Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
-    AppLogs.responseLog("Background Notification: ${message.notification?.title}");
+    AppLogs.responseLog(
+        "Background Notification: ${message.notification?.title}");
     _showNotification(message);
   }
 
   static Future<void> _checkInitialMessage() async {
-    RemoteMessage? message = await FirebaseMessaging.instance.getInitialMessage();
+    RemoteMessage? message =
+        await FirebaseMessaging.instance.getInitialMessage();
     if (message != null) {
-      AppLogs.debugLog("Initial notification received: ${message.notification?.title}");
+      AppLogs.debugLog(
+          "Initial notification received: ${message.notification?.title}");
       _handleMessageOpenedApp(message);
     }
   }
 
   static void _handleMessageOpenedApp(RemoteMessage message) {
-    AppLogs.debugLog("Notification clicked from app open: ${message.notification?.title}");
+    AppLogs.debugLog(
+        "Notification clicked from app open: ${message.notification?.title}");
     if (message.data.containsKey('payload')) {
       _onNotificationClick(message.data['payload']);
     }
   }
 
-  static Future<void> _showNotification(RemoteMessage message,{bool isForeGround = false}) async {
+  static Future<void> _showNotification(RemoteMessage message,
+      {bool isForeGround = false}) async {
     final notification = message.notification;
     if (notification == null) return;
 
-    if(notification.title != null && Platform.isAndroid && !isForeGround){
+    if (notification.title != null && Platform.isAndroid && !isForeGround) {
       AppLogs.debugLog("Skipping Android Notification");
       return;
     }
@@ -128,14 +153,16 @@ class NotificationService {
     );
   }
 
-  static Future<void> _onDidReceiveNotificationResponse(NotificationResponse response) async {
+  static Future<void> _onDidReceiveNotificationResponse(
+      NotificationResponse response) async {
     AppLogs.debugLog("Notification clicked with payload: ${response.payload}");
     _onNotificationClick(response.payload);
   }
 
   static Future<void> _onNotificationClick(String? payload) async {
     if (_onNotificationClickAction != null) {
-      AppLogs.debugLog("Executing notification click action with payload: $payload");
+      AppLogs.debugLog(
+          "Executing notification click action with payload: $payload");
       await _onNotificationClickAction!(payload);
     } else {
       AppLogs.debugLog("No action defined for notification click.");
@@ -151,7 +178,8 @@ class NotificationService {
   }) async {
     BigPictureStyleInformation? bigPictureStyle;
     if (imageUrl != null && imageUrl.isNotEmpty) {
-      final String largeIconPath = await _downloadAndSaveImage(imageUrl, 'largeIcon');
+      final String largeIconPath =
+          await _downloadAndSaveImage(imageUrl, 'largeIcon');
       bigPictureStyle = BigPictureStyleInformation(
         FilePathAndroidBitmap(largeIconPath),
         largeIcon: const DrawableResourceAndroidBitmap('app_icon'),
@@ -197,7 +225,8 @@ class NotificationService {
     AppLogs.debugLog("Notification canceled: ID ${id ?? 12345}");
   }
 
-  static Future<String> _downloadAndSaveImage(String url, String fileName) async {
+  static Future<String> _downloadAndSaveImage(
+      String url, String fileName) async {
     final directory = await getApplicationDocumentsDirectory();
     final filePath = '${directory.path}/$fileName';
     final response = await http.get(Uri.parse(url));
