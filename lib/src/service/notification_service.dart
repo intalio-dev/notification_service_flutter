@@ -84,7 +84,7 @@ class NotificationService {
   static Future<String?> getFCMToken() async {
     try {
       await FirebaseMessaging.instance.requestPermission();
-      final token = await FirebaseMessaging.instance.getToken();
+      final token = await getNotificationToken();
       AppLogs.debugLog("FCM Token: $token");
       return token;
     } catch (e, stack) {
@@ -92,7 +92,35 @@ class NotificationService {
       return null;
     }
   }
-
+static Future <String?> getNotificationToken()async{
+    if (Platform.isIOS) {
+    await FirebaseMessaging.instance.getAPNSToken().then((v) async {
+        await FirebaseMessaging.instance
+            .getToken(vapidKey: v)
+            .then((fcmToken) async {
+          print("FCM Token: $fcmToken");
+         return fcmToken;
+        });
+      }).catchError((e) async {
+        print("❌ Error getting token: $e");
+        return e;
+      });
+    }
+     if(Platform.isAndroid){
+     await FirebaseMessaging.instance.getToken().then((v) async {
+       if (v != null) {
+         print("FCM Token: $v");
+         return v;
+       } else {
+         print("Error: FCM Token is null");
+         return null;
+       }
+     }).catchError((e) async {
+       print("❌ Error getting token: $e");
+       return e;
+     });
+   }
+  }
   static void subscribeToTopics(List<String> topics) {
     for (String topic in topics) {
       FirebaseMessaging.instance.subscribeToTopic(topic).then((_) {
