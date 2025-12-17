@@ -98,28 +98,29 @@ static Future <String?> getNotificationToken()async{
         await FirebaseMessaging.instance
             .getToken(vapidKey: v)
             .then((fcmToken) async {
-          print("FCM Token: $fcmToken");
+          AppLogs.debugLog("FCM Token: $fcmToken");
          return fcmToken;
         });
       }).catchError((e) async {
-        print("❌ Error getting token: $e");
+        AppLogs.errorLog("❌ Error getting token: $e");
         return e;
       });
     }
      if(Platform.isAndroid){
      await FirebaseMessaging.instance.getToken().then((v) async {
        if (v != null) {
-         print("FCM Token: $v");
+         AppLogs.debugLog("FCM Token: $v");
          return v;
        } else {
-         print("Error: FCM Token is null");
+         AppLogs.errorLog("Error: FCM Token is null");
          return null;
        }
      }).catchError((e) async {
-       print("❌ Error getting token: $e");
+       AppLogs.errorLog("❌ Error getting token: $e");
        return e;
      });
    }
+     return null;
   }
   static void subscribeToTopics(List<String> topics) {
     for (String topic in topics) {
